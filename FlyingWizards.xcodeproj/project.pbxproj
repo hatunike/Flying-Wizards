@@ -14,6 +14,9 @@
 		006BB6C11BE9780500535647 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 006BB6BF1BE9780500535647 /* LaunchScreen.storyboard */; };
 		006BB6CC1BE9780500535647 /* FlyingWizardsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006BB6CB1BE9780500535647 /* FlyingWizardsTests.swift */; };
 		006BB6D71BE9780500535647 /* FlyingWizardsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006BB6D61BE9780500535647 /* FlyingWizardsUITests.swift */; };
+		006BB6E51BE9786600535647 /* SpriteKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 006BB6E41BE9786600535647 /* SpriteKit.framework */; };
+		006BB6E71BE97B1900535647 /* MenuScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006BB6E61BE97B1900535647 /* MenuScene.swift */; settings = {ASSET_TAGS = (); }; };
+		006BB6E91BE9857500535647 /* FlyingScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006BB6E81BE9857500535647 /* FlyingScene.swift */; settings = {ASSET_TAGS = (); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +50,9 @@
 		006BB6D21BE9780500535647 /* FlyingWizardsUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlyingWizardsUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		006BB6D61BE9780500535647 /* FlyingWizardsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlyingWizardsUITests.swift; sourceTree = "<group>"; };
 		006BB6D81BE9780500535647 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		006BB6E41BE9786600535647 /* SpriteKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SpriteKit.framework; path = System/Library/Frameworks/SpriteKit.framework; sourceTree = SDKROOT; };
+		006BB6E61BE97B1900535647 /* MenuScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuScene.swift; sourceTree = "<group>"; };
+		006BB6E81BE9857500535647 /* FlyingScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlyingScene.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +60,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				006BB6E51BE9786600535647 /* SpriteKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +84,7 @@
 		006BB6AA1BE9780500535647 = {
 			isa = PBXGroup;
 			children = (
+				006BB6E41BE9786600535647 /* SpriteKit.framework */,
 				006BB6B51BE9780500535647 /* FlyingWizards */,
 				006BB6CA1BE9780500535647 /* FlyingWizardsTests */,
 				006BB6D51BE9780500535647 /* FlyingWizardsUITests */,
@@ -99,6 +107,8 @@
 			children = (
 				006BB6B61BE9780500535647 /* AppDelegate.swift */,
 				006BB6B81BE9780500535647 /* ViewController.swift */,
+				006BB6E61BE97B1900535647 /* MenuScene.swift */,
+				006BB6E81BE9857500535647 /* FlyingScene.swift */,
 				006BB6BA1BE9780500535647 /* Main.storyboard */,
 				006BB6BD1BE9780500535647 /* Assets.xcassets */,
 				006BB6BF1BE9780500535647 /* LaunchScreen.storyboard */,
@@ -255,8 +265,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				006BB6E71BE97B1900535647 /* MenuScene.swift in Sources */,
 				006BB6B91BE9780500535647 /* ViewController.swift in Sources */,
 				006BB6B71BE9780500535647 /* AppDelegate.swift in Sources */,
+				006BB6E91BE9857500535647 /* FlyingScene.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
