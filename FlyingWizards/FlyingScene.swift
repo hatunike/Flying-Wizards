@@ -48,7 +48,7 @@ class FlyingScene: SKScene {
         wizard.xScale = 0.20
         wizard.position = CGPointMake(50, frame.size.height - 100)
         wizard.name = FlyingSceneNodes.FlyingWizard.rawValue
-        
+        wizard.zPosition = 1
         return wizard
     }
     
