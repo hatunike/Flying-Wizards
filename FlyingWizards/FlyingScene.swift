@@ -12,11 +12,14 @@ import CoreMotion
 
 enum FlyingSceneNodes : String {
     case FlyingWizard
+    case B0
+    case B0Flipped
 }
 
 class FlyingScene: SKScene {
     
     var contentLoaded = false
+    var scrollingSpeed:NSTimeInterval = 10
     
     override init(size:CGSize) {
         super.init(size: size)
@@ -31,7 +34,11 @@ class FlyingScene: SKScene {
         backgroundColor = SKColor.darkGrayColor()
         
         addChild(flyingWizardNode())
+        
+        //Must add b0 before b0Flipped
+        
         addChild(backgroundNode())
+        addChild(backgroundFlippedNode())
         
     }
     
@@ -39,14 +46,31 @@ class FlyingScene: SKScene {
         if !contentLoaded {
             createSceneContents()
             contentLoaded = true
+            
+            //Move both by rate -points/sec
+            animateWizard()
+            moveBackground0Nodes()
         }
     }
     
+    func animateWizard() {
+        
+        var gifTextures: [SKTexture] = [];
+        
+        for i in 1...4 {
+            gifTextures.append(SKTexture(imageNamed: "flying_wizard2-\(i).png"));
+        }
+        if let wizardNode = childNodeWithName(FlyingSceneNodes.FlyingWizard.rawValue) {
+            wizardNode.runAction(SKAction.repeatActionForever(SKAction.animateWithTextures(gifTextures, timePerFrame: 0.125)));
+        }
+        
+    }
     func flyingWizardNode() -> SKNode {
-        let wizard = SKSpriteNode(imageNamed: "flying_wizard.png")
-        wizard.yScale = 0.20
-        wizard.xScale = 0.20
-        wizard.position = CGPointMake(50, frame.size.height - 100)
+        let wizard = SKSpriteNode(imageNamed: "flying_wizard2-0.png")
+
+        wizard.yScale = 1.0
+        wizard.xScale = 1.0
+        wizard.position = CGPointMake(75, frame.size.height - 100)
         wizard.name = FlyingSceneNodes.FlyingWizard.rawValue
         wizard.zPosition = 1
         return wizard
@@ -57,9 +81,24 @@ class FlyingScene: SKScene {
         bgNode.size = frame.size
         bgNode.position = CGPointMake(frame.size.width/2, frame.size.height/2)
         bgNode.zPosition = -1
-
+        bgNode.name = FlyingSceneNodes.B0.rawValue
         
         return bgNode
+    }
+    
+    func backgroundFlippedNode() -> SKNode {
+        let bgNode = SKSpriteNode(imageNamed: "bg0-flipped.png")
+        
+        if let otherNode = childNodeWithName(FlyingSceneNodes.B0.rawValue){
+            
+            bgNode.position.x = otherNode.position.x+otherNode.frame.width
+            bgNode.position.y = otherNode.position.y
+        }
+        bgNode.size = frame.size
+        bgNode.zPosition = -1
+        bgNode.name = FlyingSceneNodes.B0Flipped.rawValue
+        
+       return bgNode
     }
     
     func handleRotation(data:CMDeviceMotion?) {
@@ -77,7 +116,47 @@ class FlyingScene: SKScene {
                 wizardNode.runAction(SKAction.sequence([rotationAction, moveAction]))
             }
         }
-
     }
     
+    
+    func moveBackground0Nodes() {
+        
+        
+        if let b0 = childNodeWithName(FlyingSceneNodes.B0.rawValue), b0Flipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue) {
+            let moveAction = SKAction.moveByX(-b0.frame.width*(1.0), y: 0, duration: scrollingSpeed)
+            let moveAction2 = SKAction.moveByX(-b0Flipped.frame.width*(1.0), y: 0, duration: scrollingSpeed)
+            
+            b0.runAction(moveAction, completion: { () -> Void in
+                print("Before b0-x=\(b0.position.x) b0-width = \(b0.frame.width)")
+                print("Before b0Flipped-x=\(b0Flipped.position.x) b0Flipped-width = \(b0Flipped.frame.width)")
+                b0.position.x = self.frame.size.width/2
+                b0.xScale *= -1
+                b0Flipped.xScale *= -1
+
+                b0Flipped.position.x = b0.position.x+b0.frame.width
+                
+                print("After b0-x=\(b0.position.x) b0-width = \(b0.frame.width)")
+                print("After b0Flipped-x=\(b0Flipped.position.x) b0Flipped-width = \(b0Flipped.frame.width)")
+                
+                
+                self.moveBackground0Nodes()
+            })
+            
+            b0Flipped.runAction(moveAction2, completion: { () -> Void in
+
+            })
+            
+            
+        }
+        
+    }
+    
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        scrollingSpeed = 1.0
+    }
+    
+    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        scrollingSpeed = 10.0
+    }
+        
 }
