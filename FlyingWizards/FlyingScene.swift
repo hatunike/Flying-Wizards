@@ -10,14 +10,16 @@ import UIKit
 import SpriteKit
 import CoreMotion
 
+
 enum FlyingSceneNodes : String {
     case FlyingWizard
     case B0
     case B0Flipped
 }
 
-class FlyingScene: SKScene {
+class FlyingScene: SKScene{
     
+    var num = 1
     var contentLoaded = false
     var scrollingSpeed:NSTimeInterval = 10
     
@@ -129,14 +131,24 @@ class FlyingScene: SKScene {
             b0.runAction(moveAction, completion: { () -> Void in
                 print("Before b0-x=\(b0.position.x) b0-width = \(b0.frame.width)")
                 print("Before b0Flipped-x=\(b0Flipped.position.x) b0Flipped-width = \(b0Flipped.frame.width)")
-                b0.position.x = self.frame.size.width/2
-                b0.xScale *= -1
-                b0Flipped.xScale *= -1
-
-                b0Flipped.position.x = b0.position.x+b0.frame.width
                 
-                print("After b0-x=\(b0.position.x) b0-width = \(b0.frame.width)")
-                print("After b0Flipped-x=\(b0Flipped.position.x) b0Flipped-width = \(b0Flipped.frame.width)")
+                if self.num % 2 == 1 {
+                    print(self.num)
+                    b0.position.x += b0Flipped.frame.size.width*2-1
+                    self.num = self.num+1
+                    print(self.num)
+                
+                }
+                else {
+                    b0Flipped.position.x += b0.frame.size.width*2-1
+                    self.num = self.num-1
+                    print(self.num)
+                }
+                
+                
+                
+                //print("After b0-x=\(b0.position.x) b0-width = \(b0.frame.width)")
+                //print("After b0Flipped-x=\(b0Flipped.position.x) b0Flipped-width = \(b0Flipped.frame.width)")
                 
                 
                 self.moveBackground0Nodes()
@@ -150,9 +162,15 @@ class FlyingScene: SKScene {
         }
         
     }
+   
+
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        scrollingSpeed = 1.0
+        
+            scrollingSpeed = 1.0
+        
+        
+        
     }
     
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
@@ -160,3 +178,4 @@ class FlyingScene: SKScene {
     }
         
 }
+
