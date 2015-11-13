@@ -26,7 +26,7 @@ class FlyingScene: SKScene{
     override init(size:CGSize) {
         super.init(size: size)
     }
-
+    
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
@@ -69,7 +69,7 @@ class FlyingScene: SKScene{
     }
     func flyingWizardNode() -> SKNode {
         let wizard = SKSpriteNode(imageNamed: "flying_wizard2-0.png")
-
+        
         wizard.yScale = 1.0
         wizard.xScale = 1.0
         wizard.position = CGPointMake(75, frame.size.height - 100)
@@ -100,7 +100,7 @@ class FlyingScene: SKScene{
         bgNode.zPosition = -1
         bgNode.name = FlyingSceneNodes.B0Flipped.rawValue
         
-       return bgNode
+        return bgNode
     }
     
     func handleRotation(data:CMDeviceMotion?) {
@@ -133,19 +133,17 @@ class FlyingScene: SKScene{
                 print("Before b0Flipped-x=\(b0Flipped.position.x) b0Flipped-width = \(b0Flipped.frame.width)")
                 
                 if self.num % 2 == 1 {
-                    print(self.num)
-                    b0.position.x += b0Flipped.frame.size.width*2-1
+                    //print(self.num)
+                    b0.position.x += b0Flipped.frame.size.width*2
                     self.num = self.num+1
-                    print(self.num)
-                
+                    //print(self.num)
+                    
                 }
                 else {
-                    b0Flipped.position.x += b0.frame.size.width*2-1
+                    b0Flipped.position.x += b0.frame.size.width*2
                     self.num = self.num-1
-                    print(self.num)
+                    //print(self.num)
                 }
-                
-                
                 
                 //print("After b0-x=\(b0.position.x) b0-width = \(b0.frame.width)")
                 //print("After b0Flipped-x=\(b0Flipped.position.x) b0Flipped-width = \(b0Flipped.frame.width)")
@@ -155,27 +153,64 @@ class FlyingScene: SKScene{
             })
             
             b0Flipped.runAction(moveAction2, completion: { () -> Void in
-
+                
             })
-            
             
         }
         
     }
-   
-
+    
+    
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         
-            scrollingSpeed = 1.0
-        
-        
-        
+        // Handle if no 3DTouch
+        if let touch = touches.first {
+            
+            let maximum = touch.maximumPossibleForce
+            let maximumSpeed:CGFloat = 30
+
+            if maximum == 0 {
+                if let bgNode = childNodeWithName(FlyingSceneNodes.B0.rawValue), bgFlipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue){
+                    bgNode.runAction(SKAction.speedTo(maximumSpeed, duration: 3.0))
+                    bgFlipped.runAction(SKAction.speedTo(maximumSpeed, duration: 3.0))
+                }
+            }
+            
+        }
     }
     
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        scrollingSpeed = 10.0
+        if let bgNode = childNodeWithName(FlyingSceneNodes.B0.rawValue), bgFlipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue){
+            bgNode.runAction(SKAction.speedTo(1, duration: 1.0))
+            bgFlipped.runAction(SKAction.speedTo(1, duration: 1.0))
+        }
     }
+    
+    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
         
+        if let touch = touches.first {
+            
+            
+            let force = touch.force
+            let maximum = touch.maximumPossibleForce
+            
+            if maximum > 0 {
+                let forcePressed:CGFloat = force / maximum
+                
+                let maximumSpeed:CGFloat = 30
+                
+                let speedToChangeTo = forcePressed * maximumSpeed
+                
+                
+                if let bgNode = childNodeWithName(FlyingSceneNodes.B0.rawValue), bgFlipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue){
+                    bgNode.runAction(SKAction.speedTo(speedToChangeTo, duration: 1.0))
+                    bgFlipped.runAction(SKAction.speedTo(speedToChangeTo, duration: 1.0))
+                }
+                print("force applied  \(forcePressed)")
+            }
+        }
+    }
+    
 }
 
