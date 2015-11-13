@@ -15,6 +15,11 @@ enum FlyingSceneNodes : String {
     case FlyingWizard
     case B0
     case B0Flipped
+    case GriffTower
+    case SlythTower
+    case RavenTower
+    case HuffTower
+    
 }
 
 class FlyingScene: SKScene{
@@ -41,6 +46,13 @@ class FlyingScene: SKScene{
         
         addChild(backgroundNode())
         addChild(backgroundFlippedNode())
+        
+        //towers
+        addChild(griffTower())
+//        addChild(huffTower())
+//        addChild(slythTower())
+//        addChild(ravenTower())
+        
         
     }
     
@@ -101,7 +113,54 @@ class FlyingScene: SKScene{
         bgNode.name = FlyingSceneNodes.B0Flipped.rawValue
         
         return bgNode
+        
     }
+    
+    //added towers
+    func griffTower() ->SKNode {
+        let t1 = SKSpriteNode(imageNamed: "griffindor_tower.png")
+            t1.yScale = 0.5
+        
+            t1.size = frame.size
+            t1.position = CGPointMake(frame.size.width/2, frame.size.height/4)
+            t1.zPosition = 0
+            t1.name = FlyingSceneNodes.GriffTower.rawValue
+            
+        return t1
+        
+    }
+//    
+//    func slythTower() ->SKNode {
+//        let t1 = SKSpriteNode(imageNamed: "slytherin_tower.png")
+//        t1.size = frame.size
+//        t1.position = CGPointMake(frame.size.width/2, frame.size.height/2)
+//        t1.zPosition = 0
+//        t1.name = FlyingSceneNodes.SlythTower.rawValue
+//        
+//        return t1
+//        
+//    }
+//    func huffTower() ->SKNode {
+//        let t1 = SKSpriteNode(imageNamed: "hufflepuff_tower.png")
+//        t1.size = frame.size
+//        t1.position = CGPointMake(frame.size.width/2, frame.size.height/2)
+//        t1.zPosition = 0
+//        t1.name = FlyingSceneNodes.HuffTower.rawValue
+//        
+//        return t1
+//        
+//    }
+//    func ravenTower() ->SKNode {
+//        let t1 = SKSpriteNode(imageNamed: "ravenclaw_tower.png")
+//        t1.size = frame.size
+//        t1.position = CGPointMake(frame.size.width/2, frame.size.height/2)
+//        t1.zPosition = 0
+//        t1.name = FlyingSceneNodes.RavenTower.rawValue
+//        
+//        return t1
+//        
+//    }
+
     
     func handleRotation(data:CMDeviceMotion?) {
         
@@ -129,8 +188,8 @@ class FlyingScene: SKScene{
             let moveAction2 = SKAction.moveByX(-b0Flipped.frame.width*(1.0), y: 0, duration: scrollingSpeed)
             
             b0.runAction(moveAction, completion: { () -> Void in
-                print("Before b0-x=\(b0.position.x) b0-width = \(b0.frame.width)")
-                print("Before b0Flipped-x=\(b0Flipped.position.x) b0Flipped-width = \(b0Flipped.frame.width)")
+//                print("Before b0-x=\(b0.position.x) b0-width = \(b0.frame.width)")
+//                print("Before b0Flipped-x=\(b0Flipped.position.x) b0Flipped-width = \(b0Flipped.frame.width)")
                 
                 if self.num % 2 == 1 {
                     //print(self.num)
