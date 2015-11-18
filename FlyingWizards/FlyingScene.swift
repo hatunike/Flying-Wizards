@@ -20,6 +20,7 @@ enum FlyingSceneNodes : String {
     case RavenTower
     case HuffTower
     
+    case Bludger
 }
 
 class FlyingScene: SKScene{
@@ -45,6 +46,7 @@ class FlyingScene: SKScene{
         
         //Must add b0 before b0Flipped
         
+        addChild(bludgerNode())
         addChild(backgroundNode())
         addChild(backgroundFlippedNode())
         
@@ -66,6 +68,7 @@ class FlyingScene: SKScene{
             animateWizard()
             moveBackground0Nodes()
             moveForGroundNodes()
+            moveBludgerNode()
         }
     }
     
@@ -102,6 +105,17 @@ class FlyingScene: SKScene{
         return bgNode
     }
     
+    func bludgerNode () -> SKNode {
+        let bludger = SKSpriteNode(imageNamed: "bludger.png")
+        
+        bludger.xScale = 0.1
+        bludger.yScale = 0.1
+        bludger.position = CGPointMake(350, frame.size.height - 100)
+        bludger.zPosition = 0
+        bludger.name = FlyingSceneNodes.Bludger.rawValue
+       return bludger
+    }
+    
     func backgroundFlippedNode() -> SKNode {
         let bgNode = SKSpriteNode(imageNamed: "bg0-flipped.png")
         
@@ -115,7 +129,6 @@ class FlyingScene: SKScene{
         bgNode.name = FlyingSceneNodes.B0Flipped.rawValue
         
         return bgNode
-        
     }
     
     //added towers
@@ -178,6 +191,7 @@ class FlyingScene: SKScene{
         
     }
 
+    
     
     func handleRotation(data:CMDeviceMotion?) {
         
@@ -249,8 +263,8 @@ class FlyingScene: SKScene{
             
             
             b0.runAction(moveAction, completion: { () -> Void in
-//                print("Before b0-x=\(b0.position.x) b0-width = \(b0.frame.width)")
-//                print("Before b0Flipped-x=\(b0Flipped.position.x) b0Flipped-width = \(b0Flipped.frame.width)")
+                print("Before b0-x=\(b0.position.x) b0-width = \(b0.frame.width)")
+                print("Before b0Flipped-x=\(b0Flipped.position.x) b0Flipped-width = \(b0Flipped.frame.width)")
                 
                 if self.num % 2 == 1 {
                     //print(self.num)
@@ -281,7 +295,22 @@ class FlyingScene: SKScene{
         
     }
     
-    
+    func moveBludgerNode() {
+        
+        if let bludgerNode = childNodeWithName(FlyingSceneNodes.Bludger.rawValue) {
+            //let moveAction = SKAction.moveByX(-b0.frame.width*(1.0), y: 0, duration: scrollingSpeed)
+            let moveAction = SKAction.moveByX(-bludgerNode.frame.width*(2.0), y: 0, duration: scrollingSpeed)
+            
+            bludgerNode.runAction(moveAction, completion: { () -> Void in
+            self.moveBludgerNode()
+            })
+            
+            
+        }
+        
+        
+        
+    }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         
@@ -316,6 +345,8 @@ class FlyingScene: SKScene{
             
         }
     }
+    
+    
     
     override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
         
