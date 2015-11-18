@@ -15,6 +15,7 @@ enum FlyingSceneNodes : String {
     case FlyingWizard
     case B0
     case B0Flipped
+    case Bludger
 }
 
 class FlyingScene: SKScene{
@@ -39,6 +40,7 @@ class FlyingScene: SKScene{
         
         //Must add b0 before b0Flipped
         
+        addChild(bludgerNode())
         addChild(backgroundNode())
         addChild(backgroundFlippedNode())
         
@@ -52,6 +54,7 @@ class FlyingScene: SKScene{
             //Move both by rate -points/sec
             animateWizard()
             moveBackground0Nodes()
+            moveBludgerNode()
         }
     }
     
@@ -88,6 +91,17 @@ class FlyingScene: SKScene{
         return bgNode
     }
     
+    func bludgerNode () -> SKNode {
+        let bludger = SKSpriteNode(imageNamed: "bludger.png")
+        
+        bludger.xScale = 0.1
+        bludger.yScale = 0.1
+        bludger.position = CGPointMake(350, frame.size.height - 100)
+        bludger.zPosition = 0
+        bludger.name = FlyingSceneNodes.Bludger.rawValue
+       return bludger
+    }
+    
     func backgroundFlippedNode() -> SKNode {
         let bgNode = SKSpriteNode(imageNamed: "bg0-flipped.png")
         
@@ -102,6 +116,8 @@ class FlyingScene: SKScene{
         
         return bgNode
     }
+
+    
     
     func handleRotation(data:CMDeviceMotion?) {
         
@@ -160,7 +176,22 @@ class FlyingScene: SKScene{
         
     }
     
-    
+    func moveBludgerNode() {
+        
+        if let bludgerNode = childNodeWithName(FlyingSceneNodes.Bludger.rawValue) {
+            //let moveAction = SKAction.moveByX(-b0.frame.width*(1.0), y: 0, duration: scrollingSpeed)
+            let moveAction = SKAction.moveByX(-bludgerNode.frame.width*(2.0), y: 0, duration: scrollingSpeed)
+            
+            bludgerNode.runAction(moveAction, completion: { () -> Void in
+            self.moveBludgerNode()
+            })
+            
+            
+        }
+        
+        
+        
+    }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         
@@ -186,6 +217,8 @@ class FlyingScene: SKScene{
             bgFlipped.runAction(SKAction.speedTo(1, duration: 1.0))
         }
     }
+    
+    
     
     override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
         
