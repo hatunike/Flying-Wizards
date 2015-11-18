@@ -25,8 +25,9 @@ enum FlyingSceneNodes : String {
 class FlyingScene: SKScene{
     
     var num = 1
+    var fgNum = 1
     var contentLoaded = false
-    var scrollingSpeed:NSTimeInterval = 10
+    var scrollingSpeed:NSTimeInterval = 5
     
     override init(size:CGSize) {
         super.init(size: size)
@@ -49,9 +50,9 @@ class FlyingScene: SKScene{
         
         //towers
         addChild(griffTower())
-//        addChild(huffTower())
-//        addChild(slythTower())
-//        addChild(ravenTower())
+        addChild(huffTower())
+        addChild(slythTower())
+        addChild(ravenTower())
         
         
     }
@@ -64,6 +65,7 @@ class FlyingScene: SKScene{
             //Move both by rate -points/sec
             animateWizard()
             moveBackground0Nodes()
+            moveForGroundNodes()
         }
     }
     
@@ -119,47 +121,62 @@ class FlyingScene: SKScene{
     //added towers
     func griffTower() ->SKNode {
         let t1 = SKSpriteNode(imageNamed: "griffindor_tower.png")
-            t1.yScale = 0.5
-        
             t1.size = frame.size
             t1.position = CGPointMake(frame.size.width/2, frame.size.height/4)
+            t1.position.x = -10
             t1.zPosition = 0
             t1.name = FlyingSceneNodes.GriffTower.rawValue
             
         return t1
         
     }
-//    
-//    func slythTower() ->SKNode {
-//        let t1 = SKSpriteNode(imageNamed: "slytherin_tower.png")
-//        t1.size = frame.size
-//        t1.position = CGPointMake(frame.size.width/2, frame.size.height/2)
-//        t1.zPosition = 0
-//        t1.name = FlyingSceneNodes.SlythTower.rawValue
-//        
-//        return t1
-//        
-//    }
-//    func huffTower() ->SKNode {
-//        let t1 = SKSpriteNode(imageNamed: "hufflepuff_tower.png")
-//        t1.size = frame.size
-//        t1.position = CGPointMake(frame.size.width/2, frame.size.height/2)
-//        t1.zPosition = 0
-//        t1.name = FlyingSceneNodes.HuffTower.rawValue
-//        
-//        return t1
-//        
-//    }
-//    func ravenTower() ->SKNode {
-//        let t1 = SKSpriteNode(imageNamed: "ravenclaw_tower.png")
-//        t1.size = frame.size
-//        t1.position = CGPointMake(frame.size.width/2, frame.size.height/2)
-//        t1.zPosition = 0
-//        t1.name = FlyingSceneNodes.RavenTower.rawValue
-//        
-//        return t1
-//        
-//    }
+    
+    func slythTower() ->SKNode {
+        let t1 = SKSpriteNode(imageNamed: "slytherin_tower.png")
+        
+        if let otherNode = childNodeWithName(FlyingSceneNodes.GriffTower.rawValue){
+            t1.position.x = otherNode.position.x+otherNode.frame.width*2
+            t1.position.y = otherNode.position.y + 14
+        }
+        
+        t1.size = frame.size
+        t1.zPosition = 0
+        t1.name = FlyingSceneNodes.SlythTower.rawValue
+        
+        return t1
+        
+    }
+    func huffTower() ->SKNode {
+         let t1 = SKSpriteNode(imageNamed: "hufflepuff_tower.png")
+        
+        if let otherNode = childNodeWithName(FlyingSceneNodes.GriffTower.rawValue){
+            t1.position.x = otherNode.position.x+otherNode.frame.width
+            t1.position.y = otherNode.position.y + 8
+        }
+
+        
+        t1.size = frame.size
+        t1.zPosition = 0
+        t1.name = FlyingSceneNodes.HuffTower.rawValue
+        
+        return t1
+        
+    }
+    func ravenTower() ->SKNode {
+        let t1 = SKSpriteNode(imageNamed: "ravenclaw_tower.png")
+        
+        if let otherNode = childNodeWithName(FlyingSceneNodes.GriffTower.rawValue){
+            t1.position.x = otherNode.position.x+otherNode.frame.width*3
+            t1.position.y = otherNode.position.y + 12.5
+        }
+
+        t1.size = frame.size
+        t1.zPosition = 0
+        t1.name = FlyingSceneNodes.RavenTower.rawValue
+        
+        return t1
+        
+    }
 
     
     func handleRotation(data:CMDeviceMotion?) {
@@ -178,14 +195,58 @@ class FlyingScene: SKScene{
             }
         }
     }
-    
+    func moveForGroundNodes() {
+        if let griffTower = childNodeWithName(FlyingSceneNodes.GriffTower.rawValue), huffTower = childNodeWithName(FlyingSceneNodes.HuffTower.rawValue), slythTower = childNodeWithName(FlyingSceneNodes.SlythTower.rawValue), ravenTower = childNodeWithName(FlyingSceneNodes.RavenTower.rawValue){
+            
+            let moveAction = SKAction.moveByX(-griffTower.frame.width*(2.0), y: 0, duration: scrollingSpeed)
+            let moveAction2 = SKAction.moveByX(-huffTower.frame.width*(2.0), y: 0, duration: scrollingSpeed)
+            let moveAction3 = SKAction.moveByX(-slythTower.frame.width*(2.0), y: 0, duration: scrollingSpeed)
+            let moveAction4 = SKAction.moveByX(-ravenTower.frame.width*(2.0), y: 0, duration: scrollingSpeed)
+            
+            griffTower.runAction(moveAction, completion: { () -> Void in
+                if self.fgNum == 1 {
+                    griffTower.position.x += self.frame.width * 4
+                    self.fgNum += 1
+                    print(self.fgNum)
+                }
+                if self.fgNum == 2 {
+                    huffTower.position.x += self.frame.width * 4
+                    self.fgNum += 1
+                }
+                if self.fgNum == 3 {
+                    self.fgNum += 1
+                }
+                else {
+                    slythTower.position.x += self.frame.width * 4
+                    ravenTower.position.x += self.frame.width * 4
+                    self.fgNum -= 3
+                    print(self.fgNum)
+                }
+                
+                self.moveForGroundNodes()
+            })
+            huffTower.runAction(moveAction2, completion: { () -> Void in
+                
+            })
+            slythTower.runAction(moveAction3, completion: { () -> Void in
+                
+                
+            })
+            ravenTower.runAction(moveAction4, completion: { () -> Void in
+                
+                
+            })
+        }
+    }
     
     func moveBackground0Nodes() {
         
         
-        if let b0 = childNodeWithName(FlyingSceneNodes.B0.rawValue), b0Flipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue) {
-            let moveAction = SKAction.moveByX(-b0.frame.width*(1.0), y: 0, duration: scrollingSpeed)
-            let moveAction2 = SKAction.moveByX(-b0Flipped.frame.width*(1.0), y: 0, duration: scrollingSpeed)
+        if let b0 = childNodeWithName(FlyingSceneNodes.B0.rawValue), b0Flipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue){
+            let moveAction = SKAction.moveByX(-b0.frame.width*(1.0), y: 0, duration: scrollingSpeed * 5)
+            let moveAction2 = SKAction.moveByX(-b0Flipped.frame.width*(1.0), y: 0, duration: scrollingSpeed * 5)
+            
+            
             
             b0.runAction(moveAction, completion: { () -> Void in
 //                print("Before b0-x=\(b0.position.x) b0-width = \(b0.frame.width)")
@@ -215,6 +276,7 @@ class FlyingScene: SKScene{
                 
             })
             
+
         }
         
     }
@@ -227,12 +289,16 @@ class FlyingScene: SKScene{
         if let touch = touches.first {
             
             let maximum = touch.maximumPossibleForce
-            let maximumSpeed:CGFloat = 30
+            let maximumSpeed:CGFloat = 15
 
             if maximum == 0 {
-                if let bgNode = childNodeWithName(FlyingSceneNodes.B0.rawValue), bgFlipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue){
+                if let bgNode = childNodeWithName(FlyingSceneNodes.B0.rawValue), bgFlipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue),griffTower = childNodeWithName(FlyingSceneNodes.GriffTower.rawValue), huffTower = childNodeWithName(FlyingSceneNodes.HuffTower.rawValue), slythTower = childNodeWithName(FlyingSceneNodes.SlythTower.rawValue), ravenTower = childNodeWithName(FlyingSceneNodes.RavenTower.rawValue){
                     bgNode.runAction(SKAction.speedTo(maximumSpeed, duration: 3.0))
                     bgFlipped.runAction(SKAction.speedTo(maximumSpeed, duration: 3.0))
+                    griffTower.runAction(SKAction.speedTo(maximumSpeed, duration: 3.0))
+                    huffTower.runAction(SKAction.speedTo(maximumSpeed, duration: 3.0))
+                    slythTower.runAction(SKAction.speedTo(maximumSpeed, duration: 3.0))
+                    ravenTower.runAction(SKAction.speedTo(maximumSpeed, duration: 3.0))
                 }
             }
             
@@ -240,9 +306,14 @@ class FlyingScene: SKScene{
     }
     
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        if let bgNode = childNodeWithName(FlyingSceneNodes.B0.rawValue), bgFlipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue){
+        if let bgNode = childNodeWithName(FlyingSceneNodes.B0.rawValue), bgFlipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue),griffTower = childNodeWithName(FlyingSceneNodes.GriffTower.rawValue), huffTower = childNodeWithName(FlyingSceneNodes.HuffTower.rawValue), slythTower = childNodeWithName(FlyingSceneNodes.SlythTower.rawValue), ravenTower = childNodeWithName(FlyingSceneNodes.RavenTower.rawValue){
             bgNode.runAction(SKAction.speedTo(1, duration: 1.0))
             bgFlipped.runAction(SKAction.speedTo(1, duration: 1.0))
+            griffTower.runAction(SKAction.speedTo(1, duration: 1.0))
+            huffTower.runAction(SKAction.speedTo(1, duration: 1.0))
+            slythTower.runAction(SKAction.speedTo(1, duration: 1.0))
+            ravenTower.runAction(SKAction.speedTo(1, duration: 1.0))
+            
         }
     }
     
