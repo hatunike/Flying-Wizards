@@ -108,6 +108,7 @@ class FlyingScene: SKScene{
     func bludgerNode () -> SKNode {
         let bludger = SKSpriteNode(imageNamed: "bludger.png")
         
+        
         bludger.xScale = 0.1
         bludger.yScale = 0.1
         bludger.position = CGPointMake(350, frame.size.height - 100)
@@ -221,7 +222,6 @@ class FlyingScene: SKScene{
                 if self.fgNum == 1 {
                     griffTower.position.x += self.frame.width * 4
                     self.fgNum += 1
-                    print(self.fgNum)
                 }
                 if self.fgNum == 2 {
                     huffTower.position.x += self.frame.width * 4
@@ -234,7 +234,6 @@ class FlyingScene: SKScene{
                     slythTower.position.x += self.frame.width * 4
                     ravenTower.position.x += self.frame.width * 4
                     self.fgNum -= 3
-                    print(self.fgNum)
                 }
                 
                 self.moveForGroundNodes()
@@ -297,21 +296,31 @@ class FlyingScene: SKScene{
     
     func moveBludgerNode() {
         
-        if let bludgerNode = childNodeWithName(FlyingSceneNodes.Bludger.rawValue) {
-            //let moveAction = SKAction.moveByX(-b0.frame.width*(1.0), y: 0, duration: scrollingSpeed)
-            let moveAction = SKAction.moveByX(-bludgerNode.frame.width*(2.0), y: 0, duration: scrollingSpeed)
-            
-            bludgerNode.runAction(moveAction, completion: { () -> Void in
+        if let bludgerNode = childNodeWithName(FlyingSceneNodes.Bludger.rawValue){
+            //let moveAction = SKAction.moveByX(-bludgerNode.frame.width*(1.0), y: 0, duration: scrollingSpeed)
+            //moveAction = SKAction.moveToY(wizard.position.y, duration: 0.5)
+            let move = followTheWizard()
+            bludgerNode.runAction(move,completion: { () -> Void in
+                if bludgerNode.frame.origin.x < -self.frame.width/2 {
+                    bludgerNode.runAction(SKAction.moveByX(bludgerNode.frame.origin.x + self.frame.size.width * 2, y: 0, duration: 0))
+                }
             self.moveBludgerNode()
             })
             
-            
-        }
-        
-        
+                
+            }
         
     }
-    
+    func followTheWizard() -> SKAction{
+        let wizard = childNodeWithName(FlyingSceneNodes.FlyingWizard.rawValue)
+        let followY = SKAction.moveToY(wizard!.position.y, duration: 0.005)
+        let followX = SKAction.moveByX(-4, y: 0, duration: 0.005)
+            
+        let followWizard = SKAction.sequence([followY, followX])
+            
+        return followWizard
+    }
+
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         
         // Handle if no 3DTouch
