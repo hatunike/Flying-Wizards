@@ -71,7 +71,6 @@ class FlyingScene: SKScene{
             moveBludgerNode()
         }
     }
-    
     func animateWizard() {
         
         var gifTextures: [SKTexture] = [];
@@ -81,17 +80,26 @@ class FlyingScene: SKScene{
         }
         if let wizardNode = childNodeWithName(FlyingSceneNodes.FlyingWizard.rawValue) {
             wizardNode.runAction(SKAction.repeatActionForever(SKAction.animateWithTextures(gifTextures, timePerFrame: 0.125)));
+
         }
         
     }
     func flyingWizardNode() -> SKNode {
-        let wizard = SKSpriteNode(imageNamed: "flying_wizard2-0.png")
+        let wizard = SKSpriteNode(imageNamed: "flying_wizard2-1.png")
         
-        wizard.yScale = 1.0
-        wizard.xScale = 1.0
+        wizard.yScale = 0.3
+        wizard.xScale = 0.3
         wizard.position = CGPointMake(75, frame.size.height - 100)
         wizard.name = FlyingSceneNodes.FlyingWizard.rawValue
         wizard.zPosition = 1
+        //physics
+        let size = CGSizeMake(wizard.frame.width-85, wizard.frame.height)
+        wizard.physicsBody = SKPhysicsBody.init(rectangleOfSize: size)
+        wizard.physicsBody?.affectedByGravity = false
+        wizard.physicsBody?.usesPreciseCollisionDetection = false
+        wizard.physicsBody?.mass = 7
+
+        
         return wizard
     }
     
@@ -107,13 +115,16 @@ class FlyingScene: SKScene{
     
     func bludgerNode () -> SKNode {
         let bludger = SKSpriteNode(imageNamed: "bludger.png")
-        
-        
         bludger.xScale = 0.1
         bludger.yScale = 0.1
-        bludger.position = CGPointMake(350, frame.size.height - 100)
+        bludger.position = CGPointMake(380, frame.size.height - 300)
         bludger.zPosition = 0
         bludger.name = FlyingSceneNodes.Bludger.rawValue
+        //physics
+        bludger.physicsBody = SKPhysicsBody.init(circleOfRadius: bludger.frame.width/2)
+        bludger.physicsBody?.affectedByGravity = false
+        bludger.physicsBody?.mass = 30
+        bludger.physicsBody?.linearDamping = 0
        return bludger
     }
     
@@ -191,8 +202,6 @@ class FlyingScene: SKScene{
         return t1
         
     }
-
-    
     
     func handleRotation(data:CMDeviceMotion?) {
         
@@ -206,8 +215,13 @@ class FlyingScene: SKScene{
                 let rotationAction = SKAction.rotateToAngle(rotation, duration: 0.01, shortestUnitArc: true)
                 let moveAction = SKAction.moveByX(0, y: adjustedVertical, duration: 0.01)
                 
-                wizardNode.runAction(SKAction.sequence([rotationAction, moveAction]))
-            }
+                wizardNode.runAction(SKAction.sequence([rotationAction, moveAction]), completion: {
+                    print(3)
+                    if wizardNode.position.x != 75{
+                        wizardNode.physicsBody?.affectedByGravity = true
+                    }
+                })
+                }
         }
     }
     func moveForGroundNodes() {
@@ -296,25 +310,49 @@ class FlyingScene: SKScene{
     
     func moveBludgerNode() {
         
-        if let bludgerNode = childNodeWithName(FlyingSceneNodes.Bludger.rawValue){
+        if let bludgerNode = childNodeWithName(FlyingSceneNodes.Bludger.rawValue), wizard = childNodeWithName(FlyingSceneNodes.FlyingWizard.rawValue){
+
             //let moveAction = SKAction.moveByX(-bludgerNode.frame.width*(1.0), y: 0, duration: scrollingSpeed)
             //moveAction = SKAction.moveToY(wizard.position.y, duration: 0.5)
-            let move = followTheWizard(bludgerNode)
+            let moveX = SKAction.moveToX((frame.width-100), duration: 2)
+            let moveY = SKAction.moveToY((wizard.position.y-10), duration: 2)
+            let wait = SKAction.waitForDuration(7)
+            let wait1 = SKAction.waitForDuration(1.5)
+            //let move = followTheWizard(bludgerNode)
+            let resetBludgerX = SKAction.moveToX(self.frame.width + bludgerNode.frame.width, duration: 0)
+            let resetBludgerY = SKAction.moveToY(self.randomYCoordinate(), duration: 0)
+            let moveUp = SKAction.moveByX(0, y: 35, duration: 1)
+            let moveTheY = SKAction.sequence([wait1,moveY])
+            let followWizard = SKAction.group([moveX, moveTheY])
+            let resetBludger = SKAction.group([resetBludgerX,resetBludgerY])
+            let wizardChase = SKAction.sequence([followWizard,moveUp])
             
-            bludgerNode.runAction(move,completion: { () -> Void in
-                
-                /*if bludgerNode.frame.origin.x < -self.frame.width/2 {
-                    bludgerNode.runAction(SKAction.moveByX(bludgerNode.frame.origin.x + self.frame.size.width * 2, y: 0, duration: 0))
-                    bludgerNode.runAction(SKAction.moveToY(self.randomYCoordinate(), duration: 0))
+            if bludgerNode.frame.origin.x < -75{
+                bludgerNode.physicsBody?.resting = true
+                bludgerNode.runAction(resetBludger, completion: {
+                    self.moveBludgerNode()
+                    })
+            }
+            else{
+                bludgerNode.runAction(wizardChase, completion: {
+                    self.launchBludgerToWizard(bludgerNode)
+                    bludgerNode.runAction(wait, completion: {
+                        self.moveBludgerNode()
+                                 })
+                        })
 
                 }
-                */
-
-                self.moveBludgerNode()
-            })
-            
             }
         
+        }
+    
+    func launchBludgerToWizard(bludger:SKNode) {
+        let impSpeed:CGFloat = 20
+        let wizard = childNodeWithName(FlyingSceneNodes.FlyingWizard.rawValue)
+        let vector = CGVector(dx: (wizard!.frame.origin.x*impSpeed - bludger.frame.origin.x*impSpeed), dy: (wizard!.frame.origin.y*impSpeed - bludger.frame.origin.y*impSpeed))
+        let impulseToWizard = bludger.physicsBody?.applyImpulse(vector)
+        print(2)
+        impulseToWizard
     }
     
     func randomYCoordinate() -> CGFloat {
