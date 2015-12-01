@@ -29,6 +29,8 @@ class FlyingScene: SKScene{
     var fgNum = 1
     var contentLoaded = false
     var scrollingSpeed:NSTimeInterval = 5
+    let wizardX:CGFloat = 125.0
+    let normalBludgeSpeed:CGFloat = 20
     
     override init(size:CGSize) {
         super.init(size: size)
@@ -89,11 +91,11 @@ class FlyingScene: SKScene{
         
         wizard.yScale = 0.3
         wizard.xScale = 0.3
-        wizard.position = CGPointMake(75, frame.size.height - 100)
+        wizard.position = CGPointMake(wizardX, frame.size.height - 100)
         wizard.name = FlyingSceneNodes.FlyingWizard.rawValue
         wizard.zPosition = 1
         //physics
-        let size = CGSizeMake(wizard.frame.width-85, wizard.frame.height)
+        let size = CGSizeMake(wizard.frame.width-85, wizard.frame.height - 85)
         wizard.physicsBody = SKPhysicsBody.init(rectangleOfSize: size)
         wizard.physicsBody?.affectedByGravity = false
         wizard.physicsBody?.usesPreciseCollisionDetection = false
@@ -217,7 +219,7 @@ class FlyingScene: SKScene{
                 
                 wizardNode.runAction(SKAction.sequence([rotationAction, moveAction]), completion: {
                     print(3)
-                    if wizardNode.position.x != 75{
+                    if !self.nearEqual(self.wizardX, num2: wizardNode.position.x){
                         wizardNode.physicsBody?.affectedByGravity = true
                     }
                 })
@@ -327,7 +329,7 @@ class FlyingScene: SKScene{
             let resetBludger = SKAction.group([resetBludgerX,resetBludgerY])
             let wizardChase = SKAction.sequence([followWizard,moveUp])
             
-            if bludgerNode.frame.origin.x < -75{
+            if bludgerNode.frame.origin.x < -wizardX{
                 bludgerNode.physicsBody?.resting = true
                 bludgerNode.runAction(resetBludger, completion: {
                     self.moveBludgerNode()
@@ -335,7 +337,7 @@ class FlyingScene: SKScene{
             }
             else{
                 bludgerNode.runAction(wizardChase, completion: {
-                    self.launchBludgerToWizard(bludgerNode)
+                    self.launchBludgerToWizard(bludgerNode, speed:self.normalBludgeSpeed)
                     bludgerNode.runAction(wait, completion: {
                         self.moveBludgerNode()
                                  })
@@ -346,13 +348,13 @@ class FlyingScene: SKScene{
         
         }
     
-    func launchBludgerToWizard(bludger:SKNode) {
-        let impSpeed:CGFloat = 20
+    func launchBludgerToWizard(bludger:SKNode, speed:CGFloat) {
+        let impSpeed:CGFloat = speed
         let wizard = childNodeWithName(FlyingSceneNodes.FlyingWizard.rawValue)
         let vector = CGVector(dx: (wizard!.frame.origin.x*impSpeed - bludger.frame.origin.x*impSpeed), dy: (wizard!.frame.origin.y*impSpeed - bludger.frame.origin.y*impSpeed))
-        let impulseToWizard = bludger.physicsBody?.applyImpulse(vector)
+        bludger.physicsBody?.applyImpulse(vector)
+        
         print(2)
-        impulseToWizard
     }
     
     func randomYCoordinate() -> CGFloat {
@@ -369,13 +371,13 @@ class FlyingScene: SKScene{
     
         let vector = CGVector(dx: (wizard!.frame.origin.x - bludger.frame.origin.x), dy: (wizard!.frame.origin.y - bludger.frame.origin.y))
         
-        let normVector = normalizeVector(vector)
-        let angleOfVector = vectorAngle(normVector)
+        let normVector = vector.normalizeVector()
+        let angleOfVector = normVector.vectorAngle()
         
         let pi:CGFloat = 3.14159265435
         
         if abs(angleOfVector) > (pi / 2.0) {
-            let vectorFollow = SKAction.moveBy(multiplyByScalor(normVector, scale: 2.0), duration: 0.005)
+            let vectorFollow = SKAction.moveBy(normVector.multiplyByScalor(2.0), duration: 0.005)
             print("inside \(angleOfVector)")
 
             return SKAction.sequence([vectorFollow])
@@ -394,35 +396,6 @@ class FlyingScene: SKScene{
         }
     }
     
-    
-    func normalizeVector (vector:CGVector) -> CGVector {
-        let length = vectorLength(vector)
-        if length == 0 {
-            return CGVectorMake(0, 0)
-        }
-        
-        let scale = 1.0 / length
-        
-        return multiplyByScalor(vector, scale: scale)
-    }
-    
-    func multiplyByScalor (vector:CGVector, scale:CGFloat) -> CGVector{
-        return CGVectorMake(vector.dx * scale, vector.dy * scale)
-
-    }
-    
-    func vectorLength(vector:CGVector) ->  CGFloat {
-        return sqrt(vector.dx * vector.dx + vector.dy * vector.dy)
-    }
-    
-//    CGVectorAngle(CGVector vector)
-//    {
-//    return atan2(vector.dy, vector.dx);
-//    }
-
-    func vectorAngle(vector:CGVector) -> CGFloat {
-        return atan2(vector.dy, vector.dx)
-    }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         
@@ -479,11 +452,26 @@ class FlyingScene: SKScene{
                 if let bgNode = childNodeWithName(FlyingSceneNodes.B0.rawValue), bgFlipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue){
                     bgNode.runAction(SKAction.speedTo(speedToChangeTo, duration: 1.0))
                     bgFlipped.runAction(SKAction.speedTo(speedToChangeTo, duration: 1.0))
+
+                }
+                
+                if let bludgerNode = childNodeWithName(FlyingSceneNodes.Bludger.rawValue) {
+                    self.launchBludgerToWizard(bludgerNode, speed: speedToChangeTo)
                 }
                // print("force applied  \(forcePressed)")
             }
         }
     }
     
+    func nearEqual(num1:CGFloat, num2:CGFloat, epsilon:CGFloat = 0.001) -> Bool {
+        if (abs(num1 - num2) < epsilon) {
+            return true
+        }
+        
+        return false
+    }
+    
 }
+
+
 
