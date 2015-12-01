@@ -50,7 +50,6 @@ class MenuScene: SKScene {
         title.fontColor = SKColor.whiteColor()
         title.fontSize = 44
         title.position = CGPointMake(frame.size.width/2, frame.size.height - 100)
-        
         return title
     }
     

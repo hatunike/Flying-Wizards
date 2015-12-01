@@ -9,6 +9,7 @@
 import UIKit
 import SpriteKit
 import CoreMotion
+import GameKit
 
 
 enum FlyingSceneNodes : String {
@@ -19,8 +20,8 @@ enum FlyingSceneNodes : String {
     case SlythTower
     case RavenTower
     case HuffTower
-    
     case Bludger
+    case pointBar
 }
 
 class FlyingScene: SKScene{
@@ -29,6 +30,9 @@ class FlyingScene: SKScene{
     var fgNum = 1
     var contentLoaded = false
     var scrollingSpeed:NSTimeInterval = 5
+    var points = 0
+    var bludgerSpeed:CGFloat = 20
+    var scoreLabelNode:SKLabelNode!
     
     override init(size:CGSize) {
         super.init(size: size)
@@ -69,8 +73,20 @@ class FlyingScene: SKScene{
             moveBackground0Nodes()
             moveForGroundNodes()
             moveBludgerNode()
+            pointKeeper()
         }
     }
+    func pointKeeper(){
+        scoreLabelNode = SKLabelNode(fontNamed:"MarkerFelt-Wide")
+        scoreLabelNode.zPosition = 4.0
+        scoreLabelNode.position = CGPoint( x: self.frame.midX, y: 3 * self.frame.size.height / 4 + 100)
+        scoreLabelNode.zPosition = 100
+        scoreLabelNode.text = String(points)
+        self.addChild(scoreLabelNode)
+        
+    }
+    // setting up the back wall detection
+    
     func animateWizard() {
         
         var gifTextures: [SKTexture] = [];
@@ -101,6 +117,17 @@ class FlyingScene: SKScene{
 
         
         return wizard
+    }
+    func backWall(){
+        let wallSize:CGSize = CGSizeMake(10, self.frame.height)
+        let backWall = SKNode()
+        backWall.position.x = -self.frame.width
+        backWall.position.y = self.frame.height/2
+        backWall.physicsBody = SKPhysicsBody.init(rectangleOfSize: wallSize)
+        backWall.physicsBody?.dynamic = false
+        backWall.physicsBody?.categoryBitMask = 1 << 3
+        backWall.physicsBody?.contactTestBitMask = 1 << 3 
+        
     }
     
     func backgroundNode() -> SKNode {
@@ -214,10 +241,12 @@ class FlyingScene: SKScene{
                 
                 let rotationAction = SKAction.rotateToAngle(rotation, duration: 0.01, shortestUnitArc: true)
                 let moveAction = SKAction.moveByX(0, y: adjustedVertical, duration: 0.01)
-                
+                //checking to see if wizard has been hit
                 wizardNode.runAction(SKAction.sequence([rotationAction, moveAction]), completion: {
                     print(3)
                     if wizardNode.position.x != 75{
+                        print(6)
+                        wizardNode.physicsBody?.resting = true
                         wizardNode.physicsBody?.affectedByGravity = true
                     }
                 })
@@ -314,10 +343,10 @@ class FlyingScene: SKScene{
 
             //let moveAction = SKAction.moveByX(-bludgerNode.frame.width*(1.0), y: 0, duration: scrollingSpeed)
             //moveAction = SKAction.moveToY(wizard.position.y, duration: 0.5)
-            let moveX = SKAction.moveToX((frame.width-100), duration: 2)
-            let moveY = SKAction.moveToY((wizard.position.y-10), duration: 2)
-            let wait = SKAction.waitForDuration(7)
-            let wait1 = SKAction.waitForDuration(1.5)
+            let moveX = SKAction.moveToX((frame.width-100), duration: 1.5)
+            let moveY = SKAction.moveToY((wizard.position.y-10), duration: 1.5)
+            let wait = SKAction.waitForDuration(5)
+            let wait1 = SKAction.waitForDuration(1)
             //let move = followTheWizard(bludgerNode)
             let resetBludgerX = SKAction.moveToX(self.frame.width + bludgerNode.frame.width, duration: 0)
             let resetBludgerY = SKAction.moveToY(self.randomYCoordinate(), duration: 0)
@@ -329,12 +358,16 @@ class FlyingScene: SKScene{
             
             if bludgerNode.frame.origin.x < -75{
                 bludgerNode.physicsBody?.resting = true
+                bludgerSpeed += 1
+                self.points += 10
                 bludgerNode.runAction(resetBludger, completion: {
                     self.moveBludgerNode()
                     })
             }
             else{
                 bludgerNode.runAction(wizardChase, completion: {
+                    self.scoreLabelNode.text = String(self.points)
+                    self.scrollingSpeed -= 0.05
                     self.launchBludgerToWizard(bludgerNode)
                     bludgerNode.runAction(wait, completion: {
                         self.moveBludgerNode()
@@ -347,12 +380,9 @@ class FlyingScene: SKScene{
         }
     
     func launchBludgerToWizard(bludger:SKNode) {
-        let impSpeed:CGFloat = 20
         let wizard = childNodeWithName(FlyingSceneNodes.FlyingWizard.rawValue)
-        let vector = CGVector(dx: (wizard!.frame.origin.x*impSpeed - bludger.frame.origin.x*impSpeed), dy: (wizard!.frame.origin.y*impSpeed - bludger.frame.origin.y*impSpeed))
-        let impulseToWizard = bludger.physicsBody?.applyImpulse(vector)
-        print(2)
-        impulseToWizard
+        let vector = CGVector(dx: (wizard!.frame.origin.x*bludgerSpeed - bludger.frame.origin.x*bludgerSpeed), dy: (wizard!.frame.origin.y*bludgerSpeed - bludger.frame.origin.y*bludgerSpeed))
+        bludger.physicsBody?.applyImpulse(vector)
     }
     
     func randomYCoordinate() -> CGFloat {
@@ -445,8 +475,9 @@ class FlyingScene: SKScene{
             
         }
     }
+
     
-    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+  /*  override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if let bgNode = childNodeWithName(FlyingSceneNodes.B0.rawValue), bgFlipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue),griffTower = childNodeWithName(FlyingSceneNodes.GriffTower.rawValue), huffTower = childNodeWithName(FlyingSceneNodes.HuffTower.rawValue), slythTower = childNodeWithName(FlyingSceneNodes.SlythTower.rawValue), ravenTower = childNodeWithName(FlyingSceneNodes.RavenTower.rawValue){
             bgNode.runAction(SKAction.speedTo(1, duration: 1.0))
             bgFlipped.runAction(SKAction.speedTo(1, duration: 1.0))
@@ -483,7 +514,7 @@ class FlyingScene: SKScene{
                // print("force applied  \(forcePressed)")
             }
         }
-    }
+    }*/
     
 }
 
