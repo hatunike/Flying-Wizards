@@ -9,6 +9,7 @@
 import UIKit
 import SpriteKit
 import CoreMotion
+import GameKit
 
 
 enum FlyingSceneNodes : String {
@@ -19,8 +20,8 @@ enum FlyingSceneNodes : String {
     case SlythTower
     case RavenTower
     case HuffTower
-    
     case Bludger
+    case pointBar
 }
 
 class FlyingScene: SKScene{
@@ -29,8 +30,10 @@ class FlyingScene: SKScene{
     var fgNum = 1
     var contentLoaded = false
     var scrollingSpeed:NSTimeInterval = 5
-    let wizardX:CGFloat = 125.0
-    let normalBludgeSpeed:CGFloat = 20
+    var points = 0
+    var bludgerSpeed:CGFloat = 20
+    var scoreLabelNode:SKLabelNode!
+    var alreadyLost:Bool = false
     
     override init(size:CGSize) {
         super.init(size: size)
@@ -71,8 +74,20 @@ class FlyingScene: SKScene{
             moveBackground0Nodes()
             moveForGroundNodes()
             moveBludgerNode()
+            pointKeeper()
         }
     }
+    func pointKeeper(){
+        scoreLabelNode = SKLabelNode(fontNamed:"MarkerFelt-Wide")
+        scoreLabelNode.zPosition = 4.0
+        scoreLabelNode.position = CGPoint( x: self.frame.midX, y: 3 * self.frame.size.height / 4 + 100)
+        scoreLabelNode.zPosition = 100
+        scoreLabelNode.text = String(points)
+        self.addChild(scoreLabelNode)
+        
+    }
+    // setting up the back wall detection
+    
     func animateWizard() {
         
         var gifTextures: [SKTexture] = [];
@@ -91,11 +106,11 @@ class FlyingScene: SKScene{
         
         wizard.yScale = 0.3
         wizard.xScale = 0.3
-        wizard.position = CGPointMake(wizardX, frame.size.height - 100)
+        wizard.position = CGPointMake(75, frame.size.height - 100)
         wizard.name = FlyingSceneNodes.FlyingWizard.rawValue
         wizard.zPosition = 1
         //physics
-        let size = CGSizeMake(wizard.frame.width-85, wizard.frame.height - 85)
+        let size = CGSizeMake(wizard.frame.width-85, wizard.frame.height)
         wizard.physicsBody = SKPhysicsBody.init(rectangleOfSize: size)
         wizard.physicsBody?.affectedByGravity = false
         wizard.physicsBody?.usesPreciseCollisionDetection = false
@@ -103,6 +118,17 @@ class FlyingScene: SKScene{
 
         
         return wizard
+    }
+    func backWall(){
+        let wallSize:CGSize = CGSizeMake(10, self.frame.height)
+        let backWall = SKNode()
+        backWall.position.x = -self.frame.width
+        backWall.position.y = self.frame.height/2
+        backWall.physicsBody = SKPhysicsBody.init(rectangleOfSize: wallSize)
+        backWall.physicsBody?.dynamic = false
+        backWall.physicsBody?.categoryBitMask = 1 << 3
+        backWall.physicsBody?.contactTestBitMask = 1 << 3 
+        
     }
     
     func backgroundNode() -> SKNode {
@@ -216,11 +242,20 @@ class FlyingScene: SKScene{
                 
                 let rotationAction = SKAction.rotateToAngle(rotation, duration: 0.01, shortestUnitArc: true)
                 let moveAction = SKAction.moveByX(0, y: adjustedVertical, duration: 0.01)
-                
+                //checking to see if wizard has been hit
                 wizardNode.runAction(SKAction.sequence([rotationAction, moveAction]), completion: {
                     print(3)
-                    if !self.nearEqual(self.wizardX, num2: wizardNode.position.x){
+                    if wizardNode.position.x != 75{
+                        print(6)
+                        //wizardNode.physicsBody?.resting = true
                         wizardNode.physicsBody?.affectedByGravity = true
+                        if !self.alreadyLost {
+                            self.alreadyLost = true
+                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(2.0 * Double(NSEC_PER_SEC))), dispatch_get_main_queue(), { () -> Void in
+                                NSNotificationCenter.defaultCenter().postNotificationName("player lost", object: nil)
+                            })
+                        }
+                        
                     }
                 })
                 }
@@ -316,10 +351,10 @@ class FlyingScene: SKScene{
 
             //let moveAction = SKAction.moveByX(-bludgerNode.frame.width*(1.0), y: 0, duration: scrollingSpeed)
             //moveAction = SKAction.moveToY(wizard.position.y, duration: 0.5)
-            let moveX = SKAction.moveToX((frame.width-100), duration: 2)
-            let moveY = SKAction.moveToY((wizard.position.y-10), duration: 2)
-            let wait = SKAction.waitForDuration(7)
-            let wait1 = SKAction.waitForDuration(1.5)
+            let moveX = SKAction.moveToX((frame.width-100), duration: 1.5)
+            let moveY = SKAction.moveToY((wizard.position.y-10), duration: 1.5)
+            let wait = SKAction.waitForDuration(5)
+            let wait1 = SKAction.waitForDuration(1)
             //let move = followTheWizard(bludgerNode)
             let resetBludgerX = SKAction.moveToX(self.frame.width + bludgerNode.frame.width, duration: 0)
             let resetBludgerY = SKAction.moveToY(self.randomYCoordinate(), duration: 0)
@@ -329,15 +364,19 @@ class FlyingScene: SKScene{
             let resetBludger = SKAction.group([resetBludgerX,resetBludgerY])
             let wizardChase = SKAction.sequence([followWizard,moveUp])
             
-            if bludgerNode.frame.origin.x < -wizardX{
+            if bludgerNode.frame.origin.x < -75{
                 bludgerNode.physicsBody?.resting = true
+                bludgerSpeed += 1
+                self.points += 10
                 bludgerNode.runAction(resetBludger, completion: {
                     self.moveBludgerNode()
                     })
             }
             else{
                 bludgerNode.runAction(wizardChase, completion: {
-                    self.launchBludgerToWizard(bludgerNode, speed:self.normalBludgeSpeed)
+                    self.scoreLabelNode.text = String(self.points)
+                    self.scrollingSpeed -= 0.05
+                    self.launchBludgerToWizard(bludgerNode)
                     bludgerNode.runAction(wait, completion: {
                         self.moveBludgerNode()
                                  })
@@ -348,13 +387,10 @@ class FlyingScene: SKScene{
         
         }
     
-    func launchBludgerToWizard(bludger:SKNode, speed:CGFloat) {
-        let impSpeed:CGFloat = speed
+    func launchBludgerToWizard(bludger:SKNode) {
         let wizard = childNodeWithName(FlyingSceneNodes.FlyingWizard.rawValue)
-        let vector = CGVector(dx: (wizard!.frame.origin.x*impSpeed - bludger.frame.origin.x*impSpeed), dy: (wizard!.frame.origin.y*impSpeed - bludger.frame.origin.y*impSpeed))
+        let vector = CGVector(dx: (wizard!.frame.origin.x*bludgerSpeed - bludger.frame.origin.x*bludgerSpeed), dy: (wizard!.frame.origin.y*bludgerSpeed - bludger.frame.origin.y*bludgerSpeed))
         bludger.physicsBody?.applyImpulse(vector)
-        
-        print(2)
     }
     
     func randomYCoordinate() -> CGFloat {
@@ -371,13 +407,13 @@ class FlyingScene: SKScene{
     
         let vector = CGVector(dx: (wizard!.frame.origin.x - bludger.frame.origin.x), dy: (wizard!.frame.origin.y - bludger.frame.origin.y))
         
-        let normVector = vector.normalizeVector()
-        let angleOfVector = normVector.vectorAngle()
+        let normVector = normalizeVector(vector)
+        let angleOfVector = vectorAngle(normVector)
         
         let pi:CGFloat = 3.14159265435
         
         if abs(angleOfVector) > (pi / 2.0) {
-            let vectorFollow = SKAction.moveBy(normVector.multiplyByScalor(2.0), duration: 0.005)
+            let vectorFollow = SKAction.moveBy(multiplyByScalor(normVector, scale: 2.0), duration: 0.005)
             print("inside \(angleOfVector)")
 
             return SKAction.sequence([vectorFollow])
@@ -396,6 +432,35 @@ class FlyingScene: SKScene{
         }
     }
     
+    
+    func normalizeVector (vector:CGVector) -> CGVector {
+        let length = vectorLength(vector)
+        if length == 0 {
+            return CGVectorMake(0, 0)
+        }
+        
+        let scale = 1.0 / length
+        
+        return multiplyByScalor(vector, scale: scale)
+    }
+    
+    func multiplyByScalor (vector:CGVector, scale:CGFloat) -> CGVector{
+        return CGVectorMake(vector.dx * scale, vector.dy * scale)
+
+    }
+    
+    func vectorLength(vector:CGVector) ->  CGFloat {
+        return sqrt(vector.dx * vector.dx + vector.dy * vector.dy)
+    }
+    
+//    CGVectorAngle(CGVector vector)
+//    {
+//    return atan2(vector.dy, vector.dx);
+//    }
+
+    func vectorAngle(vector:CGVector) -> CGFloat {
+        return atan2(vector.dy, vector.dx)
+    }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         
@@ -418,6 +483,8 @@ class FlyingScene: SKScene{
             
         }
     }
+    
+
     
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if let bgNode = childNodeWithName(FlyingSceneNodes.B0.rawValue), bgFlipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue),griffTower = childNodeWithName(FlyingSceneNodes.GriffTower.rawValue), huffTower = childNodeWithName(FlyingSceneNodes.HuffTower.rawValue), slythTower = childNodeWithName(FlyingSceneNodes.SlythTower.rawValue), ravenTower = childNodeWithName(FlyingSceneNodes.RavenTower.rawValue){
@@ -452,26 +519,11 @@ class FlyingScene: SKScene{
                 if let bgNode = childNodeWithName(FlyingSceneNodes.B0.rawValue), bgFlipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue){
                     bgNode.runAction(SKAction.speedTo(speedToChangeTo, duration: 1.0))
                     bgFlipped.runAction(SKAction.speedTo(speedToChangeTo, duration: 1.0))
-
-                }
-                
-                if let bludgerNode = childNodeWithName(FlyingSceneNodes.Bludger.rawValue) {
-                    self.launchBludgerToWizard(bludgerNode, speed: speedToChangeTo)
                 }
                // print("force applied  \(forcePressed)")
             }
         }
     }
     
-    func nearEqual(num1:CGFloat, num2:CGFloat, epsilon:CGFloat = 0.001) -> Bool {
-        if (abs(num1 - num2) < epsilon) {
-            return true
-        }
-        
-        return false
-    }
-    
 }
-
-
 

@@ -17,6 +17,9 @@ enum MenuNodes : String {
 class MenuScene: SKScene {
 
     var contentLoaded = false
+    var target: AnyObject?
+    var action: Selector?
+    var playButtonPressed:Bool = false
     
     override init(size:CGSize) {
         super.init(size: size)
@@ -50,7 +53,6 @@ class MenuScene: SKScene {
         title.fontColor = SKColor.whiteColor()
         title.fontSize = 44
         title.position = CGPointMake(frame.size.width/2, frame.size.height - 100)
-        
         return title
     }
     
@@ -61,6 +63,11 @@ class MenuScene: SKScene {
         customButton.name = MenuNodes.Button0.rawValue
         
         return customButton
+    }
+    
+    func addTarget(target:AnyObject?, action:Selector) {
+        self.target = target
+        self.action = action
     }
     
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
@@ -77,7 +84,12 @@ class MenuScene: SKScene {
     }
     
     func menuButtonPressed() {
-        print("Button pressed!")
+        if let target1 = target, action1 = action where !playButtonPressed {
+            playButtonPressed = true
+            target1.performSelector(action1)
+            target = nil
+            action = nil
+        }
     }
 
 }
