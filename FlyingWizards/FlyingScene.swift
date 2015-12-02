@@ -33,8 +33,10 @@ class FlyingScene: SKScene{
     var points = 0
     var bludgerSpeed:CGFloat = 20
     var scoreLabelNode:SKLabelNode!
+    var bludgSpeed = 1.5
     var alreadyLost:Bool = false
-    
+    var wizardInMotionCount:Int = 0
+
     override init(size:CGSize) {
         super.init(size: size)
     }
@@ -61,7 +63,6 @@ class FlyingScene: SKScene{
         addChild(slythTower())
         addChild(ravenTower())
         
-        
     }
     
     override func didMoveToView(view: SKView) {
@@ -75,6 +76,8 @@ class FlyingScene: SKScene{
             moveForGroundNodes()
             moveBludgerNode()
             pointKeeper()
+            addPoints()
+            progresiveSpeedUp()
         }
     }
     func pointKeeper(){
@@ -85,6 +88,25 @@ class FlyingScene: SKScene{
         scoreLabelNode.text = String(points)
         self.addChild(scoreLabelNode)
         
+    }
+    func addPoints(){
+        let wait = SKAction.waitForDuration(0.05)
+        scoreLabelNode.runAction(wait, completion: {
+            self.points += 1
+            self.scoreLabelNode.text = String(self.points)
+            self.addPoints()
+        })
+    }
+    func progresiveSpeedUp(){
+        let wait = SKAction.waitForDuration(2)
+        runAction(wait, completion: {
+            if self.scrollingSpeed >= 0.75 {
+                self.scrollingSpeed -= 0.1
+            }
+            if self.bludgSpeed >= 0.8 {
+                self.bludgSpeed -= 0.1
+            }
+        })
     }
     // setting up the back wall detection
     
@@ -110,9 +132,9 @@ class FlyingScene: SKScene{
         wizard.name = FlyingSceneNodes.FlyingWizard.rawValue
         wizard.zPosition = 1
         //physics
-        let size = CGSizeMake(wizard.frame.width-85, wizard.frame.height)
+        let size = CGSizeMake(wizard.frame.width-85, wizard.frame.height - 85)
         wizard.physicsBody = SKPhysicsBody.init(rectangleOfSize: size)
-        wizard.physicsBody?.affectedByGravity = false
+        wizard.physicsBody?.affectedByGravity = true
         wizard.physicsBody?.usesPreciseCollisionDetection = false
         wizard.physicsBody?.mass = 7
 
@@ -233,32 +255,39 @@ class FlyingScene: SKScene{
     
     func handleRotation(data:CMDeviceMotion?) {
         
+        
         if let wizardNode = childNodeWithName(FlyingSceneNodes.FlyingWizard.rawValue) {
-            if data!.gravity.y < 0 {
-                let rotation = -CGFloat(-atan2(data!.gravity.x, data!.gravity.y) - M_PI)
-                
-                let verticalMax = 12.0
-                let adjustedVertical = CGFloat(verticalMax * -data!.gravity.x)
-                
-                let rotationAction = SKAction.rotateToAngle(rotation, duration: 0.01, shortestUnitArc: true)
-                let moveAction = SKAction.moveByX(0, y: adjustedVertical, duration: 0.01)
-                //checking to see if wizard has been hit
-                wizardNode.runAction(SKAction.sequence([rotationAction, moveAction]), completion: {
-                    print(3)
-                    if wizardNode.position.x != 75{
-                        print(6)
-                        //wizardNode.physicsBody?.resting = true
-                        wizardNode.physicsBody?.affectedByGravity = true
-                        if !self.alreadyLost {
-                            self.alreadyLost = true
-                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(2.0 * Double(NSEC_PER_SEC))), dispatch_get_main_queue(), { () -> Void in
-                                NSNotificationCenter.defaultCenter().postNotificationName("player lost", object: nil)
-                            })
+            
+                    let rotation = -CGFloat(-atan2(data!.gravity.x, data!.gravity.y) - M_PI)
+                    
+                    let verticalMax = 12.0
+                    let adjustedVertical = CGFloat(verticalMax * -data!.gravity.x)
+                    
+                    
+                    //let rotationAction = SKAction.rotateToAngle(rotation, duration: 0.01, shortestUnitArc: true)
+                    //let moveAction = SKAction.moveByX(0, y: adjustedVertical, duration: 0.01)
+                    let gravity = data!.gravity
+                    physicsWorld.gravity = CGVectorMake(CGFloat(gravity.x * 10), CGFloat(gravity.y * 10))
+            
+                    //checking to see if wizard has been hit
+                    
+                    //self.wizardInMotionCount++
+                    /*
+                    wizardNode.runAction(SKAction.sequence([rotationAction, moveAction]), completion: {
+                        if wizardNode.position.x != 75{
+                            wizardNode.physicsBody?.affectedByGravity = true
+                            if !self.alreadyLost {
+                                self.alreadyLost = true
+                                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(2.0 * Double(NSEC_PER_SEC))), dispatch_get_main_queue(), { () -> Void in
+                                    NSNotificationCenter.defaultCenter().postNotificationName("player lost", object: nil)
+                                })
+                            }
                         }
-                        
-                    }
-                })
-                }
+                        self.wizardInMotionCount--
+                    })
+                    */
+    
+            
         }
     }
     func moveForGroundNodes() {
@@ -348,13 +377,12 @@ class FlyingScene: SKScene{
     func moveBludgerNode() {
         
         if let bludgerNode = childNodeWithName(FlyingSceneNodes.Bludger.rawValue), wizard = childNodeWithName(FlyingSceneNodes.FlyingWizard.rawValue){
-
             //let moveAction = SKAction.moveByX(-bludgerNode.frame.width*(1.0), y: 0, duration: scrollingSpeed)
             //moveAction = SKAction.moveToY(wizard.position.y, duration: 0.5)
-            let moveX = SKAction.moveToX((frame.width-100), duration: 1.5)
-            let moveY = SKAction.moveToY((wizard.position.y-10), duration: 1.5)
+            let moveX = SKAction.moveToX((frame.width-100), duration: bludgSpeed)
+            let moveY = SKAction.moveToY((wizard.position.y-10), duration: bludgSpeed)
             let wait = SKAction.waitForDuration(5)
-            let wait1 = SKAction.waitForDuration(1)
+            let wait1 = SKAction.waitForDuration(bludgSpeed/(3/2))
             //let move = followTheWizard(bludgerNode)
             let resetBludgerX = SKAction.moveToX(self.frame.width + bludgerNode.frame.width, duration: 0)
             let resetBludgerY = SKAction.moveToY(self.randomYCoordinate(), duration: 0)
@@ -367,15 +395,14 @@ class FlyingScene: SKScene{
             if bludgerNode.frame.origin.x < -75{
                 bludgerNode.physicsBody?.resting = true
                 bludgerSpeed += 1
-                self.points += 10
                 bludgerNode.runAction(resetBludger, completion: {
                     self.moveBludgerNode()
                     })
             }
             else{
                 bludgerNode.runAction(wizardChase, completion: {
-                    self.scoreLabelNode.text = String(self.points)
-                    self.scrollingSpeed -= 0.05
+                    self.points += 100
+               
                     self.launchBludgerToWizard(bludgerNode)
                     bludgerNode.runAction(wait, completion: {
                         self.moveBludgerNode()
@@ -483,10 +510,9 @@ class FlyingScene: SKScene{
             
         }
     }
-    
 
     
-    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+  /*  override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if let bgNode = childNodeWithName(FlyingSceneNodes.B0.rawValue), bgFlipped = childNodeWithName(FlyingSceneNodes.B0Flipped.rawValue),griffTower = childNodeWithName(FlyingSceneNodes.GriffTower.rawValue), huffTower = childNodeWithName(FlyingSceneNodes.HuffTower.rawValue), slythTower = childNodeWithName(FlyingSceneNodes.SlythTower.rawValue), ravenTower = childNodeWithName(FlyingSceneNodes.RavenTower.rawValue){
             bgNode.runAction(SKAction.speedTo(1, duration: 1.0))
             bgFlipped.runAction(SKAction.speedTo(1, duration: 1.0))
@@ -523,7 +549,7 @@ class FlyingScene: SKScene{
                // print("force applied  \(forcePressed)")
             }
         }
-    }
+    }*/
     
 }
 

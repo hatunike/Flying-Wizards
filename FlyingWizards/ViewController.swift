@@ -14,6 +14,7 @@ import CoreMotion
 class ViewController: UIViewController {
 
     var motionManager = CMMotionManager()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -32,7 +33,8 @@ class ViewController: UIViewController {
     }
     
     func playerLost() {
-
+        motionManager.stopDeviceMotionUpdates()
+        
         if let spriteView = self.view as? SKView {
             
             spriteView.showsDrawCount = true
@@ -48,13 +50,11 @@ class ViewController: UIViewController {
         if let spriteView = self.view as? SKView {
             
             let flyingScene = FlyingScene(size:spriteView.frame.size)
-            
             if motionManager.deviceMotionAvailable {
-                motionManager.stopDeviceMotionUpdates()
                 
                 motionManager.deviceMotionUpdateInterval = 0.01
-                
-                motionManager.startDeviceMotionUpdatesToQueue(NSOperationQueue.mainQueue(), withHandler: { (data:CMDeviceMotion?, error:NSError?) -> Void in
+                let queue = NSOperationQueue()
+                motionManager.startDeviceMotionUpdatesToQueue(queue, withHandler: { (data:CMDeviceMotion?, error:NSError?) -> Void in
                     
                     flyingScene.handleRotation(data)
                 })
