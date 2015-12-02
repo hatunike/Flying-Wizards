@@ -74,6 +74,7 @@ class FlyingScene: SKScene{
             moveForGroundNodes()
             moveBludgerNode()
             pointKeeper()
+            addPoints()
         }
     }
     func pointKeeper(){
@@ -84,6 +85,14 @@ class FlyingScene: SKScene{
         scoreLabelNode.text = String(points)
         self.addChild(scoreLabelNode)
         
+    }
+    func addPoints(){
+        let wait = SKAction.waitForDuration(0.05)
+        scoreLabelNode.runAction(wait, completion: {
+            self.points += 1
+            self.scoreLabelNode.text = String(self.points)
+            self.addPoints()
+        })
     }
     // setting up the back wall detection
     
@@ -340,13 +349,13 @@ class FlyingScene: SKScene{
     func moveBludgerNode() {
         
         if let bludgerNode = childNodeWithName(FlyingSceneNodes.Bludger.rawValue), wizard = childNodeWithName(FlyingSceneNodes.FlyingWizard.rawValue){
-
+            var bludgSpeed = 1.5
             //let moveAction = SKAction.moveByX(-bludgerNode.frame.width*(1.0), y: 0, duration: scrollingSpeed)
             //moveAction = SKAction.moveToY(wizard.position.y, duration: 0.5)
-            let moveX = SKAction.moveToX((frame.width-100), duration: 1.5)
-            let moveY = SKAction.moveToY((wizard.position.y-10), duration: 1.5)
+            let moveX = SKAction.moveToX((frame.width-100), duration: bludgSpeed)
+            let moveY = SKAction.moveToY((wizard.position.y-10), duration: bludgSpeed)
             let wait = SKAction.waitForDuration(5)
-            let wait1 = SKAction.waitForDuration(1)
+            let wait1 = SKAction.waitForDuration(bludgSpeed/(3/2))
             //let move = followTheWizard(bludgerNode)
             let resetBludgerX = SKAction.moveToX(self.frame.width + bludgerNode.frame.width, duration: 0)
             let resetBludgerY = SKAction.moveToY(self.randomYCoordinate(), duration: 0)
@@ -359,15 +368,19 @@ class FlyingScene: SKScene{
             if bludgerNode.frame.origin.x < -75{
                 bludgerNode.physicsBody?.resting = true
                 bludgerSpeed += 1
-                self.points += 10
                 bludgerNode.runAction(resetBludger, completion: {
                     self.moveBludgerNode()
                     })
             }
             else{
                 bludgerNode.runAction(wizardChase, completion: {
-                    self.scoreLabelNode.text = String(self.points)
-                    self.scrollingSpeed -= 0.05
+                    self.points += 100
+                    if self.scrollingSpeed >= 0.75 {
+                        self.scrollingSpeed -= 0.1
+                    }
+                    if bludgSpeed >= 0.8 {
+                        bludgSpeed -= 0.1
+                    }
                     self.launchBludgerToWizard(bludgerNode)
                     bludgerNode.runAction(wait, completion: {
                         self.moveBludgerNode()
