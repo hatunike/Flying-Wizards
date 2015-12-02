@@ -33,7 +33,8 @@ class FlyingScene: SKScene{
     var points = 0
     var bludgerSpeed:CGFloat = 20
     var scoreLabelNode:SKLabelNode!
-    
+    var bludgSpeed = 1.5
+
     override init(size:CGSize) {
         super.init(size: size)
     }
@@ -75,6 +76,7 @@ class FlyingScene: SKScene{
             moveBludgerNode()
             pointKeeper()
             addPoints()
+            progresiveSpeedUp()
         }
     }
     func pointKeeper(){
@@ -92,6 +94,17 @@ class FlyingScene: SKScene{
             self.points += 1
             self.scoreLabelNode.text = String(self.points)
             self.addPoints()
+        })
+    }
+    func progresiveSpeedUp(){
+        let wait = SKAction.waitForDuration(2)
+        runAction(wait, completion: {
+            if self.scrollingSpeed >= 0.75 {
+                self.scrollingSpeed -= 0.1
+            }
+            if self.bludgSpeed >= 0.8 {
+                self.bludgSpeed -= 0.1
+            }
         })
     }
     // setting up the back wall detection
@@ -349,7 +362,6 @@ class FlyingScene: SKScene{
     func moveBludgerNode() {
         
         if let bludgerNode = childNodeWithName(FlyingSceneNodes.Bludger.rawValue), wizard = childNodeWithName(FlyingSceneNodes.FlyingWizard.rawValue){
-            var bludgSpeed = 1.5
             //let moveAction = SKAction.moveByX(-bludgerNode.frame.width*(1.0), y: 0, duration: scrollingSpeed)
             //moveAction = SKAction.moveToY(wizard.position.y, duration: 0.5)
             let moveX = SKAction.moveToX((frame.width-100), duration: bludgSpeed)
@@ -375,12 +387,7 @@ class FlyingScene: SKScene{
             else{
                 bludgerNode.runAction(wizardChase, completion: {
                     self.points += 100
-                    if self.scrollingSpeed >= 0.75 {
-                        self.scrollingSpeed -= 0.1
-                    }
-                    if bludgSpeed >= 0.8 {
-                        bludgSpeed -= 0.1
-                    }
+               
                     self.launchBludgerToWizard(bludgerNode)
                     bludgerNode.runAction(wait, completion: {
                         self.moveBludgerNode()
